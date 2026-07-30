@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>STA - Station Assist Ver.0.2.0</title>
+
+<style>
+/* ===== 基本（ロングタップ禁止含む） ===== */
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+}
+html,body{
+  margin:0; padding:0;
+  width:100%; height:100%;
+  overflow:hidden;
+  background:#f3eee4;
+  color:#222;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;
+}
+body{ display:flex; flex-direction:column; }
+
+/* ===== Start Screen ===== */
+#startScreen{
+  position:fixed; inset:0; z-index:9999;
+  background:#2a2a2a;
+  display:flex; flex-direction:column; align-items:center;
+}
+#topHeader{
+  width:100%; display:flex; justify-content:space-between;
+  padding:16px 20px;
+  font-size:18px; font-weight:700; color:#fff;
+}
+#topTitle{ text-align:center; margin-top:8px; margin-bottom:14px; }
+.titleJa{ font-size:28px; font-weight:800; }
+.titleEn{ font-size:14px; color:#cccccc; margin-top:6px; }
+.topLine{ width:90%; border:0; border-top:2px solid #555; margin:8px 0 12px; }
+
+/* 言語グリッド */
+.bigLangGrid{
+  width:100%; flex:1;
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:16px; padding:18px;
+}
+.bigTile{
+  border:none; border-radius:20px;
+  background:linear-gradient(180deg,#4a4a4a,#3a3a3a);
+  color:white;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  padding:18px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.45);
+  transition:transform .14s ease, box-shadow .14s ease;
+}
+.bigTile:active{ transform:translateY(2px) scale(.998); box-shadow:0 4px 12px rgba(0,0,0,0.35); }
+.bigTile .flag{ font-size:40px; }
+.bigTile .name{ margin-top:10px; font-size:20px; font-weight:700; color:#fff; }
+.bigTile[data-lang="ja"] .name{ font-size:18px; }
+
+/* ===== Main Layout ===== */
+#mainLayout{
+  width:100%; height:100%;
+  display:flex; flex-direction:column;
+}
+
+/* ===== 英語エリア（高さ固定 300px） ===== */
+#englishArea{
+  height:300px;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:10px;
+  background:#e9ddd6;
+  color:#222;
+  text-align:center;
+}
+#englishText{
+  max-width:100%;
+  font-size:clamp(15px, 6vw, 30px);
+  line-height:1.3;
+  font-weight:600;
+  color:#222;
+  padding:10px 0;
+  white-space:normal;
+  word-break:break-word;
+}
+
+/* 英文＋日本語の2段表示 */
+.enText{
+  font-size:clamp(22px, 12vw, 33px);
+  font-weight:600;
+  line-height:1.3;
+  color:#222;
+  white-space:normal;
+  word-break:break-word;
+}
+.enText{
+  animation: popIn 0.12s ease-out;
+}
+
+@keyframes popIn{
+  from{
+    transform:translateY(12px);
+    opacity:0;
+  }
+  to{
+    transform:translateY(0);
+    opacity:1;
+  }
+}
+
+.jaSmall{
+  font-size:15px;
+  line-height:1.35;
+  color:#555;
+  margin-top:14px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* ===== アイコンエリア（固定高さ） ===== */
+#iconArea{
+  height:60px;
+  display:flex; align-items:center; justify-content:center;
+  gap:10px; padding:10px;
+  background:#4a4a4a;
+  box-shadow:none;
+}
+.iconBtn{
+  border:none;
+  border-radius:12px;
+  color:#fff;
+  font-size:16px;
+  font-weight:700;
+  padding:12px 14px;
+  background:#6a6a6a;      /* ← グレー系 */
+  box-shadow:none;         /* ← 影削除 */
+}
+
+.catBtn{
+  flex:1;
+  padding:6px 0;
+  font-size:clamp(13px, 2.6vw, 18px);
+  border:none;
+  border-radius:12px;
+  background:#6a6a6a;
+  color:#fff;
+  box-shadow:none;
+}
+
+.iconBtn:active{ transform:translateY(1px); }
+
+/* ===== カテゴリバー（固定高さ） ===== */
+#categoryBar{
+  height:60px;
+  display:flex; flex-wrap:wrap;
+  justify-content:space-between;
+  gap:8px; padding:6px 12px;
+  background:#3a3a3a;
+  box-shadow:none; 
+}
+.catBtn{
+  flex:1;
+  padding:6px 0;
+  font-size:clamp(13px, 2.6vw, 18px);
+  border:none; border-radius:12px;
+  background:#5a5a5a;
+  color:#222;
+  box-shadow:0 4px 10px rgba(0,0,0,0.35);
+}
+.catBtn:active{ transform:translateY(1px); }
+
+/* カテゴリ色 */
+.catBtn[data-cat="dore"]{ background:#8BC34A; }
+.catBtn[data-cat="train"]{ background:#4FC3F7; }
+.catBtn[data-cat="ticket"]{ background:#FFD54F; color:#333; }
+.catBtn[data-cat="ic"]{ background:#BA68C8; }
+.catBtn[data-cat="info"]{ background:#E57373; }
+
+/* ===== フレーズ一覧（残りの高さを全部使う） ===== */
+#phraseArea{
+  flex:1;
+  overflow-y:auto;
+  background:#464242;
+  padding:12px;
+}
+
+/* ドラム要素 */
+.phrase{
+  display:flex; align-items:flex-start;
+  gap:8px;
+  background:#d8c9c9;
+  border-radius:10px;
+  margin-bottom:6px;
+  padding:10px 3px;
+  font-size:16px;
+  color:#222;
+  border-left:8px solid #ccc;
+  cursor:pointer;
+  min-height:48px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+.code{
+  font-size:14px;
+  min-width:10px;
+  color:#222;
+  padding-top:2px;
+}
+.phrase .ja{
+  font-size:18px; font-weight:600;
+  line-height:1.35;
+  color:#222;
+  white-space:normal;
+  overflow:hidden;
+  text-overflow:clip;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  margin-left:4px;
+}
+.phrase:active{
+  transform:scale(0.98);
+  background:#cfc0c0;
+}
+
+/* カテゴリ帯 */
+.catdore{ border-left-color:#8BC34A; }
+.cattrain{ border-left-color:#4FC3F7; }
+.catticket{ border-left-color:#FFD54F; }
+.catic{ border-left-color:#BA68C8; }
+.catinfo{ border-left-color:#E57373; }
+
+/* ===== Memo Panel ===== */
+#memoPanel{
+  position:fixed; inset:0;
+  background:#f5f5f0;
+  display:none; flex-direction:column;
+  z-index:99999;
+}
+#memoTop{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:12px 16px; background:#ddd;
+}
+#memoTitle{ color:#222; font-size:20px; font-weight:800; }
+.memoBtns{ display:flex; gap:10px; }
+.memoBtn{
+  border:none; border-radius:12px;
+  padding:10px 14px; font-size:15px;
+  background:#bbb;
+}
+#memoCanvas{
+  flex:1;
+  touch-action:none;
+  background:#fffef8;
+}
+
+/* 小さい画面の微調整 */
+@media (max-width:420px){
+  .titleJa{ font-size:22px; }
+  .bigTile .flag{ font-size:36px; }
+  #englishText{ font-size:22px; }
+  .iconBtn{ min-width:60px; padding:8px 10px; font-size:14px; }
+}
+</style>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon192.png">
+<link rel="apple-touch-icon" href="icon192.png">
+<meta name="theme-color" content="#005BAC">
+</head>
+<body>
+<!-- ===== Start Screen ===== -->
+<div id="startScreen">
+  <div id="topHeader">
+    <div>STA</div>
+    <div>Ver.0.2.0</div>
+  </div>
+
+  <div id="topTitle">
+    <div class="titleJa">言語を選択</div>
+    <div class="titleEn">Select Language</div>
+  </div>
+
+  <hr class="topLine">
+
+  <div class="bigLangGrid">
+    <button class="bigTile" onclick="startApp('en')">
+      <div class="flag">🇺🇸</div>
+      <div class="name">English</div>
+    </button>
+
+    <button class="bigTile" onclick="startApp('zh')">
+      <div class="flag">🇨🇳</div>
+      <div class="name">中文</div>
+    </button>
+
+    <button class="bigTile" onclick="startApp('ko')">
+      <div class="flag">🇰🇷</div>
+      <div class="name">한국어</div>
+    </button>
+
+    <button class="bigTile" data-lang="ja" onclick="startApp('ja')">
+      <div class="flag">🇯🇵</div>
+      <div class="name">日本語表示</div>
+    </button>
+  </div>
+</div>
+
+<!-- ===== Main Layout ===== -->
+<div id="mainLayout" style="display:none;">
+  <div id="englishArea">
+    <div id="englishText">フレーズを選択してください</div>
+  </div>
+
+  <div id="iconArea">
+    <button class="iconBtn gray" onclick="goHome()">HOME</button>
+    <button class="iconBtn speaker" onclick="speakCurrent()">🔊音声</button>
+    <button class="iconBtn dark" onclick="openMemo()">手書き</button>
+  </div>
+
+  <div id="categoryBar">
+    <button class="catBtn" data-cat="dore">どれ？</button>
+    <button class="catBtn" data-cat="train">列車内</button>
+    <button class="catBtn" data-cat="ticket">きっぷ</button>
+    <button class="catBtn" data-cat="ic">IC</button>
+    <button class="catBtn" data-cat="info">運行情報</button>
+  </div>
+
+  <div id="phraseArea"></div>
+</div>
+
+<!-- ===== Memo Panel ===== -->
+<div id="memoPanel">
+  <div id="memoTop">
+    <div id="memoTitle">手書きパネル</div>
+    <div class="memoBtns">
+      <button class="memoBtn" onclick="clearCanvas()">クリア</button>
+      <button class="memoBtn" onclick="closeMemo()">閉じる</button>
+    </div>
+  </div>
+  <canvas id="memoCanvas"></canvas>
+</div>
+
+<script>
+/* ===== 状態 ===== */
+let currentLang = "ja";
+let currentPhrase = null;
+
+/* ===== DOM ===== */
+const phraseArea = document.getElementById('phraseArea');
+const englishText = document.getElementById('englishText');
+const startScreen = document.getElementById('startScreen');
+const mainLayout = document.getElementById('mainLayout');
+const phraseGroups = ['dore', 'train', 'ticket', 'ic', 'info'];
+
+/* ===== ロングタップ禁止 ===== */
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('selectstart', e => e.preventDefault());
+document.addEventListener('touchstart', e => {}, {passive:true});
+
+/* ===== UI制御 ===== */
+function speakCurrent(){
+  if(!currentPhrase) return;
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(currentPhrase[currentLang] || currentPhrase.ja);
+  const langMap = { ja:"ja-JP", en:"en-US", zh:"zh-CN", ko:"ko-KR", vi:"vi-VN", th:"th-TH" };
+  utter.lang = langMap[currentLang] || "en-US";
+  utter.rate = 0.95;
+  speechSynthesis.speak(utter);
+}
+
+function goHome(){
+  startScreen.style.display = 'flex';
+  mainLayout.style.display = 'none';
+}
+
+function startApp(lang){
+  currentLang = lang;
+  startScreen.style.display = 'none';
+  mainLayout.style.display = 'flex';
+  englishText.innerHTML = "フレーズを選択してください";
+  buildSingleDrum();
+}
+
+function selectPhrase(item){
+  currentPhrase = item;
+  englishText.innerHTML = `
+    <div class="enText">${item.en}</div>
+    <div class="jaSmall">${item.ja}</div>
+  `;
+}
+
+/* ===== メモ ===== */
+const memoPanel = document.getElementById('memoPanel');
+const canvas = document.getElementById('memoCanvas');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+
+function openMemo(){
+  memoPanel.style.display = 'flex';
+  resizeCanvas();
+}
+function closeMemo(){
+  memoPanel.style.display = 'none';
+}
+function resizeCanvas(){
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#111';
+}
+function clearCanvas(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+canvas.addEventListener('pointerdown', e => {
+  drawing = true;
+  const r = canvas.getBoundingClientRect();
+  ctx.beginPath();
+  ctx.moveTo(e.clientX - r.left, e.clientY - r.top);
+});
+canvas.addEventListener('pointermove', e => {
+  if(!drawing) return;
+  const r = canvas.getBoundingClientRect();
+  ctx.lineTo(e.clientX - r.left, e.clientY - r.top);
+  ctx.stroke();
+});
+canvas.addEventListener('pointerup', () => { drawing = false; });
+canvas.addEventListener('pointercancel', () => { drawing = false; });
+canvas.addEventListener('pointerleave', () => { drawing = false; });
+window.addEventListener('resize', resizeCanvas);
+
+/* ===== 初期化（追加の長押し防止） ===== */
+(function init(){
+  let lastTouch = 0;
+  document.addEventListener('touchend', e => {
+    const now = Date.now();
+    if (now - lastTouch < 500) e.preventDefault();
+    lastTouch = now;
+  }, {passive:false});
+})();
+
+/* ===== ドラム構築 ===== */
+function buildSingleDrum(){
+  phraseArea.innerHTML = "";
+
+  const all = phraseGroups.flatMap(group => phrases[group]);
+
+  all.forEach(item => {
+    const div = document.createElement("div");
+    div.className = `phrase cat${item.cat}`;
+    div.innerHTML = `
+      <div class="code">${item.no}</div>
+      <div class="ja">${item.ja}</div>
+    `;
+
+    div.addEventListener('click', () => {
+      selectPhrase(item);
+    });
+
+    phraseArea.appendChild(div);
+  });
+
+  phraseArea.scrollTop = 0;
+}
+
+/* ===== カテゴリボタンでスクロールジャンプ ===== */
+document.querySelectorAll(".catBtn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const cat = btn.dataset.cat;
+
+    const targets = phraseArea.querySelectorAll(`.cat${cat}`);
+    if(targets.length === 0) return;
+
+    const first = targets[0];
+    const rect = first.getBoundingClientRect();
+    const areaRect = phraseArea.getBoundingClientRect();
+
+    const offset = rect.top - areaRect.top;
+
+    phraseArea.scrollTo({
+      top: phraseArea.scrollTop + offset - 4,
+      behavior: "smooth"
+    });
+  });
+});
+
+/* ===== phrases 配列 ===== */
+const phrases = {
+  dore: [
+    { cat:"dore", no:1, role:"Q", ja:"この列車はどの駅で降りますか？", en:"Which station will you get off at?" },
+    { cat:"dore", no:2, role:"Q", ja:"最終の目的地はどこですか？", en:"What is your final destination?" },
+    { cat:"dore", no:3, role:"I", ja:"乗り換えてください。", en:"Please transfer." },
+    { cat:"dore", no:4, role:"I", ja:"次に来る列車をご利用ください。", en:"Please take the next arriving train." },
+    { cat:"dore", no:5, role:"E", ja:"乗り換え時間が短いです。", en:"Transfer time is short." },
+    { cat:"dore", no:6, role:"I", ja:"乗車を急いでください。", en:"Please board as soon as possible." }
+  ],
+
+  train: [
+    { cat:"train", no:1, role:"E", ja:"この列車は特急列車です。", en:"This is a limited express train." },
+    { cat:"train", no:2, role:"E", ja:"全席指定席です。", en:"Reserved seats only." },
+    { cat:"train", no:3, role:"Q", ja:"指定席特急券をお持ちですか？", en:"Do you have a reserved seat ticket?" },
+    { cat:"train", no:4, role:"I", ja:"席のご案内をします。", en:"We will show you to your seat." },
+    { cat:"train", no:5, role:"I", ja:"車掌にお知らせください。", en:"Please speak to the conductor." },
+    { cat:"train", no:6, role:"E", ja:"この列車は智頭線を通ります。", en:"This train runs on the Chizu Line." },
+    { cat:"train", no:7, role:"E", ja:"ジャパンレールパスは使えません。", en:"Japan Rail Pass is not valid." },
+    { cat:"train", no:8, role:"E", ja:"ICカードは使えません。", en:"IC cards cannot be used." },
+    { cat:"train", no:9, role:"E", ja:"指定席は満席です。ドア付近での立席乗車となります。", en:"Reserved seats are full. Please stand near the door." },
+    { cat:"train", no:10, role:"E", ja:"この列車は普通列車です。各駅に停まります。", en:"This is a local train. It stops at all stations." },
+    { cat:"train", no:11, role:"I", ja:"後ろのドアからご乗車ください。運賃は後払いです。前のドアからお降りください。", en:"Please board through the rear door, pay when you get off, and exit through the front door." },
+    { cat:"train", no:12, role:"I", ja:"運賃箱にお支払いください。乗車券を運転士に見せてください。", en:"Please pay at the fare box and show your ticket to the driver." }
+  ],
+
+  ticket: [
+    { cat:"ticket", no:1, role:"Q", ja:"行き先を教えてください。", en:"Please tell me your destination." },
+    { cat:"ticket", no:2, role:"I", ja:"乗車券を見せてください。", en:"Please show your ticket." },
+    { cat:"ticket", no:3, role:"Q", ja:"スマートフォンのルート検索を見せてください。", en:"Can you show me your route search?" },
+    { cat:"ticket", no:4, role:"I", ja:"きっぷを購入してください。", en:"Please buy a ticket." },
+    { cat:"ticket", no:5, role:"E", ja:"智頭線の運賃が必要です。JRの乗車券は使えません。", en:"The Chizu Line fare is required. JR tickets are not valid." },
+    { cat:"ticket", no:6, role:"I", ja:"運賃をお支払いください。", en:"Please pay the fare." },
+    { cat:"ticket", no:7, role:"I", ja:"降車駅でお支払いください。", en:"Please pay at your destination station." },
+    { cat:"ticket", no:8, role:"E", ja:"乗車券に未使用証明をします。", en:"We can mark your ticket as unused." },
+    { cat:"ticket", no:9, role:"E", ja:"駅の窓口で払い戻しできます。", en:"You can get a refund at the ticket counter." },
+    { cat:"ticket", no:10, role:"I", ja:"智頭線の運賃をお支払いください。", en:"Please pay the Chizu Line fare." },
+    { cat:"ticket", no:11, role:"E", ja:"パスのエリア外です。エリア外の運賃をお支払いください。", en:"You are outside the pass area. Please pay the extra fare." },
+    { cat:"ticket", no:12, role:"I", ja:"JR区間と智頭線は別々にきっぷを購入してください。", en:"Please buy separate tickets for the JR section and the Chizu Line." },
+    { cat:"ticket", no:13, role:"E", ja:"乗車ルートと乗車券のルートが違います。", en:"Your ticket route is incorrect." },
+    { cat:"ticket", no:14, role:"I", ja:"差額をお支払いください。", en:"Please pay the fare difference." },
+    { cat:"ticket", no:15, role:"I", ja:"現金のみでお支払いください。", en:"Please pay in cash only." },
+    { cat:"ticket", no:16, role:"E", ja:"クレジットカードまたはICカードで支払えます。", en:"You can pay by credit card or IC card." },
+    { cat:"ticket", no:17, role:"E", ja:"早く到着するルートがあります。料金は高くなります。", en:"There is a faster route. It costs more." },
+    { cat:"ticket", no:18, role:"Q", ja:"このルートにしますか？", en:"Would you like this route?" },
+    { cat:"ticket", no:19, role:"E", ja:"変更・払い戻しは列車の発車前のみできます。", en:"Changes and refunds are available only before departure." },
+    { cat:"ticket", no:20, role:"E", ja:"乗り遅れの場合は、同日の後続の特急列車に立席で乗車できます。", en:"If you miss your train, you may take a later limited express train on the same day as a standing passenger." },
+    { cat:"ticket", no:21, role:"E", ja:"後続の列車の指定席利用には、差額のお支払いが必要です。", en:"A fare difference is required to use a reserved seat on a later train." }
+  ],
+
+  ic: [
+    { cat:"ic", no:1, role:"E", ja:"ここはICカードエリア外です。通常のきっぷを購入してください。", en:"This is outside the IC card area. Please buy a regular ticket." },
+    { cat:"ic", no:2, role:"I", ja:"ICカードを自動改札機にタッチしてください。", en:"Please tap your IC card at the ticket gate." },
+    { cat:"ic", no:3, role:"Q", ja:"どの駅からICカードで入場しましたか？", en:"Which station did you enter from with your IC card?" },
+    { cat:"ic", no:4, role:"I", ja:"ICカードエリアの駅でカードの入場記録の取り消しができます。係員におたずねください。", en:"Please ask the staff at an IC card area station to cancel your IC card entry record." }
+  ],
+
+  info: [
+    { cat:"info", no:1, role:"E", ja:"信号待ちです。", en:"We are waiting for a signal." },
+    { cat:"info", no:2, role:"E", ja:"しばらく停車します。", en:"We will stop for a while." },
+    { cat:"info", no:3, role:"E", ja:"列車の運行が遅れています。", en:"Train services are delayed." },
+    { cat:"info", no:4, role:"I", ja:"次の列車をご利用ください。", en:"Please take the next train." },
+    { cat:"info", no:5, role:"I", ja:"次に来る列車をご利用ください。", en:"Please take the next arriving train." },
+    { cat:"info", no:6, role:"E", ja:"運転を見合わせています。", en:"Train service is suspended." },
+    { cat:"info", no:7, role:"E", ja:"運転再開時刻は未定です。", en:"We do not know when train service will resume." },
+    { cat:"info", no:8, role:"E", ja:"🌧 天候の影響 ⚠️ 事故の影響 🔧 故障の影響", en:"🌧 Bad weather ⚠️ An accident 🔧 A mechanical problem" },
+    { cat:"info", no:9, role:"E", ja:"この列車は途中で運転を取りやめます。", en:"This train will terminate before the final destination." },
+    { cat:"info", no:10, role:"E", ja:"誤った列車に乗っています。", en:"You are on the wrong train." },
+    { cat:"info", no:11, role:"I", ja:"次の駅で降りてください。戻る列車をご利用ください。", en:"Please get off at the next station and take a train back." }
+  ]
+};
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js');
+  });
+}
+</script>
+</body>
+</html>
