@@ -493,7 +493,7 @@ function startApp(lang){
 function selectPhrase(item){
   currentPhrase = item;
   englishText.innerHTML = `
-    <div class="enText">${item.en}</div>
+    <div class="enText">${item[currentLang] || item.ja}</div>
     <div class="jaSmall">${item.ja}</div>
   `;
 }
