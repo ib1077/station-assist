@@ -258,6 +258,48 @@ body{ display:flex; flex-direction:column; }
   background:#fffef8;
 }
 
+
+/* ===== 路線図 ===== */
+#routeMapPanel{
+  position:fixed; inset:0;
+  background:#f5f5f0;
+  display:none; flex-direction:column;
+  z-index:100000;
+}
+#routeMapTop{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:12px 16px; background:#ddd;
+}
+#routeMapTitle{
+  color:#222; font-size:20px; font-weight:800;
+}
+.routeMapClose{
+  border:none; border-radius:12px;
+  padding:10px 14px; font-size:15px;
+  background:#bbb;
+}
+#routeMapImageWrap{
+  flex:1;
+  overflow:auto;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:10px;
+}
+#routeMapImage{
+  display:block;
+  width:100%;
+  max-width:635px;
+  height:auto;
+  object-fit:contain;
+}
+.routeMapBtn{
+  border:none; border-radius:12px;
+  padding:10px 16px; font-size:16px; font-weight:700;
+  background:#5a5a5a; color:#fff;
+  margin:0 auto 8px;
+}
+
 /* 小さい画面の微調整 */
 @media (max-width:420px){
   .titleJa{ font-size:22px; }
@@ -283,6 +325,7 @@ body{ display:flex; flex-direction:column; }
     <div class="titleJa">言語を選択</div>
     <div class="titleEn">Select Language</div>
   </div>
+  <button class="routeMapBtn" onclick="openRouteMap()">路線図</button>
 
   <hr class="topLine">
 
@@ -306,6 +349,17 @@ body{ display:flex; flex-direction:column; }
       <div class="flag">🇯🇵</div>
       <div class="name">日本語表示</div>
     </button>
+  </div>
+</div>
+
+<!-- ===== Route Map Panel ===== -->
+<div id="routeMapPanel">
+  <div id="routeMapTop">
+    <div id="routeMapTitle">路線図</div>
+    <button class="routeMapClose" onclick="closeRouteMap()">戻る</button>
+  </div>
+  <div id="routeMapImageWrap">
+    <img id="routeMapImage" src="./route-map.png" alt="智頭線 路線図">
   </div>
 </div>
 
@@ -355,6 +409,18 @@ const englishText = document.getElementById('englishText');
 const startScreen = document.getElementById('startScreen');
 const mainLayout = document.getElementById('mainLayout');
 const phraseGroups = ['dore', 'train', 'ticket', 'ic', 'info'];
+
+/* ===== 路線図 ===== */
+const routeMapPanel = document.getElementById('routeMapPanel');
+
+function openRouteMap(){
+  routeMapPanel.style.display = 'flex';
+}
+
+function closeRouteMap(){
+  routeMapPanel.style.display = 'none';
+}
+
 
 /* ===== ロングタップ禁止 ===== */
 document.addEventListener('contextmenu', e => e.preventDefault());
@@ -488,10 +554,9 @@ document.querySelectorAll(".catBtn").forEach(btn => {
     });
   });
 });
+
 </script>
-
 <script src="./phrases.js"></script>
-
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
