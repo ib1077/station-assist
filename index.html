@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<title>STA - Station Assist Ver.0.2.0</title>
+<title>STA - Station Assist Ver.0.2.1</title>
 
 <style>
 /* ===== 基本（ロングタップ禁止含む） ===== */
@@ -344,6 +344,12 @@ body{ display:flex; flex-direction:column; }
   display:block; width:100%; max-width:700px; height:auto;
 }
 
+/* PWA更新：HOME右上だけに追加 */
+#updateTools{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:400;}
+#updateButton{border:1px solid #888;border-radius:7px;background:#444;color:#fff;padding:7px 9px;font-size:12px;cursor:pointer;}
+#updateButton:disabled{opacity:.6;}
+#updateStatus{position:fixed;top:58px;right:12px;left:12px;z-index:100001;background:#333;color:#fff;padding:12px;border-radius:8px;font-size:14px;}
+#updateStatus:empty{display:none;}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon192.png">
@@ -351,11 +357,12 @@ body{ display:flex; flex-direction:column; }
 <meta name="theme-color" content="#005BAC">
 </head>
 <body>
+<div id="updateStatus" role="status" aria-live="polite"></div>
 <!-- ===== Start Screen ===== -->
 <div id="startScreen">
   <div id="topHeader">
     <div>STA</div>
-    <div>Ver.0.2.0</div>
+    <div id="updateTools"><span>ver.0.2.1</span><button id="updateButton" type="button">更新して再起動</button></div>
   </div>
 
   <div id="topTitle">
@@ -616,13 +623,7 @@ document.querySelectorAll(".catBtn").forEach(btn => {
 
 <script src="./phrases.js"></script>
 
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js');
-  });
-}
-</script>
+<script src="./pwa-update.js"></script>
 
 </body>
 </html>
