@@ -24,8 +24,7 @@
     registered().then(r=>{
       const worker=r.installing;
       if(worker)worker.addEventListener('statechange',()=>{
-        if(worker.state==='redundant')show('オフライン用データを保存できませんでした。通信を確認して更新してください。');
-        if(worker.state==='activated' && !busy)show('オフライン用データの保存が完了しました。');
+        if(worker.state==='redundant' && !navigator.serviceWorker.controller)show('オフライン用データを保存できませんでした。通信を確認して更新してください。');
       });
     }).catch(()=>{
       if(!navigator.serviceWorker.controller)show('オフライン用データを保存できませんでした。オンラインで再度開いてください。');
@@ -63,6 +62,6 @@
     }catch(error){
       show('更新できませんでした。現在のバージョンを使用します');
       console.warn('STA update:',error);
-    }finally{busy=false;button.disabled=false;}
+    }finally{busy=false;switching=false;button.disabled=false;}
   });
 })();
