@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<title>STA - Station Assist Ver.0.2.2</title>
+<title>STA - Station Assist Ver.0.2.6</title>
 
 <style>
 /* ===== 基本（ロングタップ禁止含む） ===== */
@@ -350,6 +350,32 @@ body{ display:flex; flex-direction:column; }
 #updateButton:disabled{opacity:.6;}
 #updateStatus{flex:none;width:calc(100% - 40px);color:#fff;font-size:13px;line-height:1.4;margin:0 20px 8px;}
 #updateStatus:empty{display:none;}
+/* External translation helper: independent of STA phrase functions. */
+#translateButton{border:1px solid #888;border-radius:7px;background:#444;color:#fff;padding:7px 9px;font-size:12px;cursor:pointer;}
+#externalTranslate{width:min(92vw,420px);max-height:85vh;overflow:auto;border:1px solid #777;border-radius:14px;padding:20px;background:#2a2a2a;color:#fff;font-size:15px;}
+#externalTranslate::backdrop{background:rgba(0,0,0,.55);}
+#externalTranslate h2{font-size:19px;margin:0 0 14px;}
+#externalTranslate button,#externalTranslate a{display:block;width:100%;margin:10px 0;padding:12px;border:1px solid #888;border-radius:9px;background:#444;color:#fff;text-align:center;text-decoration:none;font:inherit;box-sizing:border-box;}
+#externalTranslate p{line-height:1.6;font-size:14px;}
+#externalTranslate [hidden]{display:none;}
+#updateTools{flex-wrap:wrap;justify-content:flex-end;}
+#languageTapImage{width:100%;max-width:700px;flex:none;padding:12px 14px 24px;color:#222;}
+.languageListHeading{text-align:center;font-size:32px;margin:8px 0;}
+.languageListHint{text-align:center;font-size:14px;color:#555;margin:0 0 14px;}
+#languageTapRows{display:flex;flex-direction:column;border:1px solid #888;border-radius:10px;overflow:hidden;}
+#languageTapRows button{display:grid;grid-template-columns:48px 1fr 1fr;align-items:center;gap:8px;min-height:66px;border:0;border-bottom:1px solid #bbb;background:white;color:#222;padding:9px 10px;text-align:left;cursor:pointer;font:inherit;}
+#languageTapRows button:last-child{border-bottom:0;}
+#languageTapRows button:focus-visible{outline:3px solid #005bac;outline-offset:-3px;background:#e4effa;}
+#languageTapRows button:active{background:#e4effa;}
+.languageFlag{font-size:27px;text-align:center;}
+.languageNative{font-size:19px;font-weight:700;overflow-wrap:anywhere;}
+.languageJapanese{font-size:17px;font-weight:600;overflow-wrap:anywhere;}
+#languageLaunchDialog{width:min(92vw,420px);max-height:85vh;overflow:auto;border:1px solid #888;border-radius:14px;padding:20px;background:#2a2a2a;color:white;}
+#languageLaunchDialog::backdrop{background:#0008;}
+#languageLaunchDialog h2{font-size:19px;}
+#languageLaunchDialog p{line-height:1.5;}
+#languageLaunchDialog select,#languageLaunchDialog button,#languageLaunchDialog a{box-sizing:border-box;display:block;width:100%;margin:12px 0;padding:12px;border:1px solid #888;border-radius:8px;background:#444;color:white;font:inherit;text-align:center;text-decoration:none;}
+#languageLaunchDialog [hidden]{display:none;}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon192.png">
@@ -361,7 +387,7 @@ body{ display:flex; flex-direction:column; }
 <div id="startScreen">
   <div id="topHeader">
     <div>STA</div>
-    <div id="updateTools"><span>ver.0.2.2</span><button id="updateButton" type="button">更新して再起動</button></div>
+    <div id="updateTools"><button id="translateButton" type="button" aria-haspopup="dialog">翻訳</button><button id="updateButton" type="button">Ver.0.2.6</button></div>
   </div>
 
   <div id="updateStatus" role="status" aria-live="polite"></div>
@@ -400,6 +426,23 @@ body{ display:flex; flex-direction:column; }
   <button class="otherLangBtn" onclick="openLanguageGuide()">その他の言語 ⇩</button>
 </div>
 
+<dialog id="externalTranslate" aria-labelledby="externalTranslateTitle">
+  <h2 id="externalTranslateTitle">外部の翻訳アプリ</h2>
+  <button id="chooseAndroid" type="button">Android：Google翻訳</button>
+  <button id="chooseIphone" type="button">iPhone：Apple「翻訳」</button>
+  <div id="androidGuide" hidden>
+    <p>Google翻訳アプリの起動を試します。端末によっては開けません（実機未確認）。</p>
+    <a id="launchGoogleTranslate" href="#">アプリを開く（試行）</a>
+    <p>開かない場合は、スマートフォンのホーム画面・アプリ一覧から「Google翻訳」を開いてください。</p>
+    <a href="https://translate.google.com/" target="_blank" rel="noopener noreferrer">Web版を開く（通信が必要）</a>
+  </div>
+  <div id="iphoneGuide" hidden>
+    <p>Apple「翻訳」への直接起動は確認できていません。iPhoneのホーム画面やアプリライブラリで「翻訳」を探して開いてください。</p>
+    <p>翻訳後はアプリ切り替えでSTAへ戻れます。</p>
+  </div>
+  <button id="closeTranslate" type="button">STAに戻る</button>
+</dialog>
+
 <!-- ===== Route Map Panel ===== -->
 <div id="routeMapPanel">
   <div id="routeMapTop">
@@ -418,7 +461,7 @@ body{ display:flex; flex-direction:column; }
     <button class="languageGuideBack" onclick="closeLanguageGuide()">戻る</button>
   </div>
   <div class="languageGuideImageWrap">
-    <img class="languageGuideImage" src="./language-guide.png" alt="Which language?">
+    <div id="languageTapImage"><h2 class="languageListHeading">Which language?</h2><p class="languageListHint">言語をタップして翻訳アプリへ</p><div id="languageTapRows"></div></div>
   </div>
 </div>
 
@@ -625,6 +668,87 @@ document.querySelectorAll(".catBtn").forEach(btn => {
 <script src="./phrases.js"></script>
 
 <script src="./pwa-update.js"></script>
+<script>
+(()=>{
+  const dialog=document.getElementById('externalTranslate');
+  const opener=document.getElementById('translateButton');
+  const android=document.getElementById('androidGuide');
+  const iphone=document.getElementById('iphoneGuide');
+  const select=kind=>{android.hidden=kind!=='android';iphone.hidden=kind!=='iphone';};
+  opener.addEventListener('click',()=>{select('');dialog.showModal();});
+  document.getElementById('chooseAndroid').addEventListener('click',()=>select('android'));
+  document.getElementById('chooseIphone').addEventListener('click',()=>select('iphone'));
+  document.getElementById('closeTranslate').addEventListener('click',()=>dialog.close());
+  dialog.addEventListener('close',()=>opener.focus());
+  const fallback=new URL('./index.html',location.href);
+  fallback.hash='external-translate-android';
+  const launch=document.getElementById('launchGoogleTranslate');
+  launch.href='intent://translate.google.com/#Intent;scheme=https;package=com.google.android.apps.translate;S.browser_fallback_url='+encodeURIComponent(fallback.href)+';end';
+  launch.addEventListener('click',event=>{
+    // Only a deliberate tap on Android attempts an external application.
+    if(!/Android/i.test(navigator.userAgent))event.preventDefault();
+  });
+  if(location.hash==='#external-translate-android'){
+    select('android');dialog.showModal();
+    history.replaceState(null,'',location.pathname+location.search);
+  }
+})();
+</script>
 
+<dialog id="languageLaunchDialog" aria-labelledby="languageLaunchTitle">
+<h2 id="languageLaunchTitle">翻訳アプリを開きますか？</h2>
+<label id="languageVariantLabel" for="languageVariant" hidden>使用する言語を選んでください</label>
+<select id="languageVariant" hidden></select>
+<p id="languageLaunchDescription"></p>
+<a id="languageLaunchLink" href="#">Google翻訳アプリを開く</a>
+<p id="languageLaunchHelp">開かない場合は「戻る」でSTAを続けられます。言語指定が反映されるかは実機で確認中です。</p>
+<button id="languageLaunchCancel" type="button">戻る</button>
+</dialog>
+<script>
+(()=>{
+ const rows=[
+ ['英語',[['英語','en']]],['中国語',[['中国語（簡体字）','zh-CN'],['中国語（繁体字）','zh-TW']]],['韓国語',[['韓国語','ko']]],
+ ['ベトナム',[['ベトナム語','vi']]],['タイ',[['タイ語','th']]],
+ ['インドネシア',[['インドネシア語','id']]],['フィリピン',[['フィリピノ語','tl'],['英語','en']]],
+ ['マレーシア',[['マレー語','ms']]],['バングラデシュ',[['ベンガル語','bn']]],
+ ['インド',[['ヒンディー語','hi'],['英語','en'],['ベンガル語','bn'],['タミル語','ta'],['テルグ語','te'],['マラーティー語','mr'],['ウルドゥー語','ur'],['グジャラート語','gu'],['カンナダ語','kn'],['マラヤーラム語','ml'],['パンジャブ語','pa']]],
+ ['ネパール',[['ネパール語','ne']]],['スリランカ',[['シンハラ語','si'],['タミル語','ta']]],
+ ['ミャンマー',[['ミャンマー語','my']]],['フランス',[['フランス語','fr']]],['ドイツ',[['ドイツ語','de']]],
+ ['イタリア',[['イタリア語','it']]],['スペイン',[['スペイン語','es']]],['ポルトガル',[['ポルトガル語','pt']]],
+ ['ブラジル',[['ポルトガル語','pt']]],['メキシコ',[['スペイン語','es']]]];
+ const dialog=document.getElementById('languageLaunchDialog'),select=document.getElementById('languageVariant');
+ const link=document.getElementById('languageLaunchLink'),description=document.getElementById('languageLaunchDescription');
+ const android=/Android/i.test(navigator.userAgent);let trigger;
+ function refresh(){
+  const option=select.selectedOptions[0];
+  description.textContent='翻訳アプリを開きます。アプリで「'+option.textContent+'」を選択してください。';
+  link.href='intent://translate.google.com/#Intent;scheme=https;package=com.google.android.apps.translate;end';
+  link.hidden=!android;
+  document.getElementById('languageLaunchHelp').textContent=android?'言語は自動で切り替わりません。開かない場合は「戻る」でSTAを続けられます。':'この試作はAndroidのGoogle翻訳アプリ用です。この端末では翻訳アプリを手動で開いて、上記の言語を選んでください。';
+ }
+ const labels=[
+ ['🌐','English','英語'],['🌐','中文','中国語'],['🇰🇷','한국어','韓国語'],
+ ['🇻🇳','Tiếng Việt','ベトナム語'],['🇹🇭','ไทย','タイ語'],['🇮🇩','Bahasa Indonesia','インドネシア語'],
+ ['🇵🇭','Filipino / English','フィリピン'],['🇲🇾','Bahasa Melayu','マレー語'],['🇧🇩','বাংলা','ベンガル語'],
+ ['🇮🇳','India','インド（言語を選択）'],['🇳🇵','नेपाली','ネパール語'],['🇱🇰','සිංහල / தமிழ்','スリランカ'],
+ ['🇲🇲','မြန်မာ','ミャンマー語'],['🇫🇷','Français','フランス語'],['🇩🇪','Deutsch','ドイツ語'],
+ ['🇮🇹','Italiano','イタリア語'],['🇪🇸','Español','スペイン語'],['🇵🇹','Português','ポルトガル語'],
+ ['🇧🇷','Português','ブラジル'],['🇲🇽','Español','メキシコ']];
+ rows.forEach(([country,languages],index)=>{
+  const button=document.createElement('button');button.type='button';button.setAttribute('aria-label',country+'：翻訳言語を選ぶ');
+  labels[index].forEach((text,i)=>{const span=document.createElement('span');span.className=['languageFlag','languageNative','languageJapanese'][i];span.textContent=text;button.appendChild(span);});
+  button.addEventListener('click',()=>{
+   trigger=button;select.replaceChildren();
+   languages.forEach(([name,code])=>{const o=document.createElement('option');o.textContent=name;o.value=code;select.appendChild(o);});
+   select.hidden=languages.length===1;document.getElementById('languageVariantLabel').hidden=select.hidden;
+   refresh();dialog.showModal();
+  });document.getElementById('languageTapRows').appendChild(button);
+ });
+ select.addEventListener('change',refresh);
+ link.addEventListener('click',event=>{if(!android)event.preventDefault();});
+ document.getElementById('languageLaunchCancel').addEventListener('click',()=>dialog.close());
+ dialog.addEventListener('close',()=>trigger?.focus());
+})();
+</script>
 </body>
 </html>
